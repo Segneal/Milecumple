@@ -235,6 +235,31 @@
       animation: slideUp 1s ease-out 1.9s forwards;
     }
 
+    /* ── Download button ── */
+    .download-btn {
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 300;
+      font-size: clamp(0.65rem, 1.8vw, 0.8rem);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,0.45);
+      background: transparent;
+      border: 1px solid rgba(0,0,0,0.2);
+      border-radius: 30px;
+      padding: 10px 28px;
+      cursor: pointer;
+      margin-top: 28px;
+      opacity: 0;
+      animation: slideUp 1s ease-out 2.2s forwards;
+      transition: all 0.3s ease;
+    }
+
+    .download-btn:hover {
+      color: rgba(0,0,0,0.7);
+      border-color: rgba(0,0,0,0.4);
+      background: rgba(255,255,255,0.1);
+    }
+
     @keyframes slideUp {
       from { opacity: 0; transform: translateY(25px); }
       to { opacity: 1; transform: translateY(0); }
@@ -334,6 +359,8 @@
     <div class="bottom-ornament"></div>
 
     <p class="te-esperamos">No faltes&hellip;</p>
+
+    <button class="download-btn" id="downloadBtn">Guardar invitaci&oacute;n</button>
   </main>
 
   <script>
@@ -506,6 +533,201 @@
         container.appendChild(div);
       });
     })();
+
+    // ── Download as image (drawn on canvas) ──
+    document.getElementById('downloadBtn').addEventListener('click', function () {
+      const btn = this;
+      btn.textContent = 'Generando...';
+      btn.style.pointerEvents = 'none';
+
+      const W = 1080, H = 1920; // portrait ratio for sharing
+      const c = document.createElement('canvas');
+      c.width = W; c.height = H;
+      const x = c.getContext('2d');
+
+      // Background
+      x.fillStyle = '#A47DAB';
+      x.fillRect(0, 0, W, H);
+
+      // Silver sparkle dots
+      for (let i = 0; i < 200; i++) {
+        const sx = Math.random() * W;
+        const sy = Math.random() * H;
+        const sr = Math.random() * 3 + 0.5;
+        const sa = Math.random() * 0.5 + 0.2;
+        x.globalAlpha = sa;
+        x.fillStyle = '#dddde8';
+        x.beginPath();
+        x.arc(sx, sy, sr, 0, Math.PI * 2);
+        x.fill();
+        // some as 4-point stars
+        if (Math.random() > 0.6) {
+          x.globalAlpha = sa * 0.7;
+          const len = sr * 4;
+          x.strokeStyle = '#dddde8';
+          x.lineWidth = 0.8;
+          x.beginPath();
+          x.moveTo(sx - len, sy); x.lineTo(sx + len, sy);
+          x.moveTo(sx, sy - len); x.lineTo(sx, sy + len);
+          x.stroke();
+        }
+      }
+      x.globalAlpha = 1;
+
+      // Draw black bows as simple shapes
+      function drawBow(bx, by, size) {
+        x.save();
+        x.translate(bx, by);
+        x.fillStyle = '#1a1a1a';
+        // Left loop
+        x.beginPath();
+        x.ellipse(-size * 0.35, -size * 0.05, size * 0.45, size * 0.28, -0.25, 0, Math.PI * 2);
+        x.fill();
+        // Right loop
+        x.beginPath();
+        x.ellipse(size * 0.35, -size * 0.05, size * 0.45, size * 0.28, 0.25, 0, Math.PI * 2);
+        x.fill();
+        // Center knot
+        x.beginPath();
+        x.ellipse(0, size * 0.02, size * 0.15, size * 0.2, 0, 0, Math.PI * 2);
+        x.fill();
+        // Tails
+        x.beginPath();
+        x.moveTo(-size * 0.08, size * 0.18);
+        x.quadraticCurveTo(-size * 0.3, size * 0.5, -size * 0.5, size * 0.65);
+        x.quadraticCurveTo(-size * 0.25, size * 0.4, -size * 0.05, size * 0.2);
+        x.fill();
+        x.beginPath();
+        x.moveTo(size * 0.08, size * 0.18);
+        x.quadraticCurveTo(size * 0.3, size * 0.5, size * 0.5, size * 0.65);
+        x.quadraticCurveTo(size * 0.25, size * 0.4, size * 0.05, size * 0.2);
+        x.fill();
+        // Shine
+        x.globalAlpha = 0.15;
+        x.fillStyle = '#555';
+        x.beginPath();
+        x.ellipse(-size * 0.35, -size * 0.12, size * 0.18, size * 0.1, -0.3, 0, Math.PI * 2);
+        x.fill();
+        x.beginPath();
+        x.ellipse(size * 0.35, -size * 0.12, size * 0.18, size * 0.1, 0.3, 0, Math.PI * 2);
+        x.fill();
+        x.globalAlpha = 1;
+        x.restore();
+      }
+
+      var bowPositions = [
+        [90, 80, 70], [W - 90, 140, 60], [70, 420, 50], [W - 80, 580, 55],
+        [85, 1400, 48], [W - 85, 1520, 65], [100, 1750, 55], [W - 100, 1800, 52],
+        [60, 900, 42], [W - 60, 1100, 46], [W - 70, 350, 44], [80, 700, 40]
+      ];
+      bowPositions.forEach(function (b) { drawBow(b[0], b[1], b[2]); });
+
+      // ── Top ornament line ──
+      x.strokeStyle = 'rgba(0,0,0,0.4)';
+      x.lineWidth = 2;
+      var grd = x.createLinearGradient(W / 2 - 120, 0, W / 2 + 120, 0);
+      grd.addColorStop(0, 'transparent');
+      grd.addColorStop(0.5, 'rgba(0,0,0,0.5)');
+      grd.addColorStop(1, 'transparent');
+      x.strokeStyle = grd;
+      x.beginPath();
+      x.moveTo(W / 2 - 120, 520);
+      x.lineTo(W / 2 + 120, 520);
+      x.stroke();
+
+      // ── Stars row ──
+      function drawStar(sx, sy, size) {
+        x.fillStyle = 'rgba(192,192,192,0.7)';
+        x.beginPath();
+        for (var i = 0; i < 4; i++) {
+          var angle = (i * Math.PI) / 2;
+          x.moveTo(sx, sy);
+          x.lineTo(sx + Math.cos(angle - 0.15) * size * 0.35, sy + Math.sin(angle - 0.15) * size * 0.35);
+          x.lineTo(sx + Math.cos(angle) * size, sy + Math.sin(angle) * size);
+          x.lineTo(sx + Math.cos(angle + 0.15) * size * 0.35, sy + Math.sin(angle + 0.15) * size * 0.35);
+        }
+        x.fill();
+      }
+      var starY = 560;
+      [-60, -30, 0, 30, 60].forEach(function (off) { drawStar(W / 2 + off, starY, 12); });
+
+      // ── Main title: Milena / mis 10 años ──
+      x.fillStyle = '#000';
+      x.textAlign = 'center';
+      x.font = 'italic 300 130px Cormorant Garamond, Georgia, serif';
+      x.fillText('Milena', W / 2, 740);
+      x.font = 'italic 400 72px Cormorant Garamond, Georgia, serif';
+      x.fillText('mis 10 a\u00f1os', W / 2, 830);
+
+      // ── Divider ──
+      x.strokeStyle = 'rgba(0,0,0,0.35)';
+      x.lineWidth = 1;
+      x.beginPath();
+      x.moveTo(W / 2 - 40, 890);
+      x.lineTo(W / 2 + 40, 890);
+      x.stroke();
+
+      // ── Fecha ──
+      x.fillStyle = 'rgba(0,0,0,0.45)';
+      x.font = '400 22px Josefin Sans, sans-serif';
+      x.letterSpacing = '6px';
+      x.fillText('FECHA', W / 2, 960);
+      x.letterSpacing = '0px';
+      x.fillStyle = '#000';
+      x.font = '600 42px Cormorant Garamond, Georgia, serif';
+      x.fillText('7 de Junio', W / 2, 1010);
+      x.fillStyle = 'rgba(0,0,0,0.75)';
+      x.font = '400 34px Cormorant Garamond, Georgia, serif';
+      x.fillText('12:30 hs a 17:30 hs', W / 2, 1055);
+
+      // ── Lugar ──
+      x.fillStyle = 'rgba(0,0,0,0.45)';
+      x.font = '400 22px Josefin Sans, sans-serif';
+      x.letterSpacing = '6px';
+      x.fillText('LUGAR', W / 2, 1140);
+      x.letterSpacing = '0px';
+      x.fillStyle = '#000';
+      x.font = '600 42px Cormorant Garamond, Georgia, serif';
+      x.fillText('Quinta Estilo Campo', W / 2, 1190);
+      x.fillStyle = 'rgba(0,0,0,0.75)';
+      x.font = '400 34px Cormorant Garamond, Georgia, serif';
+      x.fillText('Guatemala 1748, Luis Guill\u00f3n', W / 2, 1235);
+
+      // ── Te esperamos ──
+      x.fillStyle = 'rgba(0,0,0,0.45)';
+      x.font = '400 24px Josefin Sans, sans-serif';
+      x.letterSpacing = '6px';
+      x.fillText('\u00a1TE ESPERAMOS!', W / 2, 1330);
+      x.letterSpacing = '0px';
+
+      // ── Bottom ornament ──
+      var grd2 = x.createLinearGradient(W / 2 - 120, 0, W / 2 + 120, 0);
+      grd2.addColorStop(0, 'transparent');
+      grd2.addColorStop(0.5, 'rgba(0,0,0,0.5)');
+      grd2.addColorStop(1, 'transparent');
+      x.strokeStyle = grd2;
+      x.lineWidth = 2;
+      x.beginPath();
+      x.moveTo(W / 2 - 120, 1390);
+      x.lineTo(W / 2 + 120, 1390);
+      x.stroke();
+
+      // ── No faltes ──
+      x.fillStyle = 'rgba(0,0,0,0.55)';
+      x.font = 'italic 300 46px Cormorant Garamond, Georgia, serif';
+      x.fillText('No faltes\u2026', W / 2, 1450);
+
+      // Download
+      c.toBlob(function (blob) {
+        var link = document.createElement('a');
+        link.download = 'invitacion-milena-10.png';
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
+        btn.textContent = 'Guardar invitaci\u00f3n';
+        btn.style.pointerEvents = '';
+      }, 'image/png');
+    });
   </script>
 </body>
 </html>
